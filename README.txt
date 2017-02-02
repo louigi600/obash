@@ -68,4 +68,4 @@ root      2118  2098  0 16:02 pts/0    00:00:00 /usr/local/bin/containers -c
 
 Just a note onn how I strip my personal key and iv scrambling stuff from the version I use myself
 diff -ubw functions.c  distributable/functions.c  > from_my_to_distributable.patch
-make distributable creates the directory, copies the code  and patches functions.c
+make distributable creates the directory, copies the code  and patches functions.c 
