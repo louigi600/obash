@@ -1,5 +1,3 @@
-testing tag
-
 WHY obfuscate shell scripts:
 It's generally not a good idea to obfuscate shell scripts, as it burdens maintenance and seriously impedes debugging, but none the less, there may be circumstances where you might want to obfuscate what's being done, and/or some sensitive data in the script itself. Mind you that obfuscated self executing scrips are not as safe as you might want: they have inside them the code to extract the obfuscated script, so any determined person, with time to spare, can extract the script from them. How long that takes depends on the determination, time to spare and how well the obfuscator was made.
 
