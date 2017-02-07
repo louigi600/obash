@@ -84,3 +84,13 @@ alter the case or add a constant to each char ....
 Just a note onn how I strip my personal key and iv scrambling stuff from the version I use myself
 diff -ubw functions.c  distributable/functions.c  > from_my_to_distributable.patch
 make distributable creates the directory, copies the code  and patches functions.c 
+
+
+Making a non restricted binary:
+I'm working on buiding a binary that can be used on machines different from the one it was obfuscated on. I don't want to hit the same limitations that shc has (where you need to be running fairly similar setup) so I'll go the static binary way. This is still work in progress.
+
+This produced a static binary with a warning:
+gcc -static testme.c -lssl -lcrypto -ldl -lltdl -static-libgcc
+
+/usr/lib64/gcc/x86_64-slackware-linux/5.3.0/../../../../lib64/libcrypto.a(dso_dlfcn.o): In function `dlfcn_globallookup':
+dso_dlfcn.c:(.text+0x11): warning: Using 'dlopen' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
