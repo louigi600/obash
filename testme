@@ -1,0 +1,12 @@
+#!/bin/bash
+echo "my pid is: $$"
+echo $0
+echo $*
+echo -n "enter something ... "
+read A
+echo $A
+sleep 10 &
+echo "sleep pid is: $!"
+ps -ef | grep $$
+ps -ef | grep $! 
+sleep 2 

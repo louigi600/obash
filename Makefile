@@ -23,7 +23,7 @@ backup:
 
 distributable:	clean	
 	mkdir -p distributable/obash
-	cp -p $(FILES) distributable/obash
+	cp -p $(FILES) testme distributable/obash
 	( cd distributable/obash ; ln -s obfuscated_bash.c obash.c ; patch -p1 < ../../from_my_to_distributable.patch ; rm *.orig )
 	
 
