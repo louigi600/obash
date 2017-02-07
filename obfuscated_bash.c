@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
 
   if(!flag_status('o',optionarray,sizeof(optionarray)/sizeof(option))) sprintf(output_filename,"%s.x",argv[optind]);
   else get_param(output_filename,'o',optionarray,sizeof(optionarray)/sizeof(option));
-  printf("Output filename: %s\n",output_filename);
+  printf("Output filename will be: %s\n",output_filename);
 /* finished parsing options */  
 
 /* making sure input file is readable and then immediately closing it */
@@ -193,14 +193,18 @@ int main(int argc, char *argv[])
   if((ret=mk_sh_c(input_filename,key,iv))<0)
   printf("Failed: %i/n",ret);
   else printf("Created %s.c\n",input_filename);
-  sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -lssl -lcrypto && strip %s",input_filename,output_filename,output_filename);
+  printf("Compiling %s.c ",input_filename);
+  if(flag_status('r',optionarray,sizeof(optionarray)/sizeof(option)))
+  { printf("as static reusable binary ");
+    sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -static -lssl -lcrypto -ldl -lltdl -static-libgcc && strip %s",input_filename,output_filename,output_filename);
+  } else sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -lssl -lcrypto && strip %s",input_filename,output_filename,output_filename);
 //  printf("%s\n",str); 
 //  exit(0);
-  printf("Compiling %s.c ... ",input_filename); 
+  printf("... ",input_filename); 
   if(system(str)!=0) 
   { printf("failed\n");
     exit(1);
-  } else printf("done\nOutput file is %s.x\n",input_filename);
+  } else printf("done\n");
 
 /* if -c flag was issued cleaning up intermediate c file */
   if(flag_status('c',optionarray,sizeof(optionarray)/sizeof(option))) 
@@ -211,6 +215,7 @@ int main(int argc, char *argv[])
       exit(1);
     } else printf("done\n");
   }
+  printf("Output filename: %s\n",output_filename);
   return(0);
   printf("%s\n",copyright);
 }
