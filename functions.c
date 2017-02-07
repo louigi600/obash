@@ -64,7 +64,7 @@ int getkey (char *key)
 
 int getiv (char *iv)
 { FILE *filepointer;
-  int i=0,rb=0;
+  int rb=0;
   char serial[20]="\0";
   char *s, *end;
 
@@ -209,7 +209,7 @@ int mk_sh_c ( char *infilename, char *key, char *iv )
 { unsigned char *plaintext, *ciphertext, *b64ctx;
   char *outfilename;
   FILE *infile,*outfile;
-  int rb,wb,insize,ctsize,i; 
+  int rb,insize,ctsize,i; 
   char str[256]="\0";
 
 /* outfilename is infilename suffixed with .c */
@@ -240,7 +240,6 @@ int mk_sh_c ( char *infilename, char *key, char *iv )
 /* Initialise the openssl library */
   ERR_load_crypto_strings();
   OpenSSL_add_all_algorithms();
-//  OPENSSL_config(NULL);
   OPENSSL_no_config();
 
 /* reading infile into plaintext */
