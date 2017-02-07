@@ -64,7 +64,8 @@ int main(int argc, char *argv[])
 /* Initialise the openssl library */
   ERR_load_crypto_strings();
   OpenSSL_add_all_algorithms();
-  OPENSSL_config(NULL);
+//  OPENSSL_config(NULL);
+  OPENSSL_no_config();
 
   ctx=unbase64(crypted_script,strlen(crypted_script));
   rb=decrypt(ctx,ctx_len,key,iv,plaintext);

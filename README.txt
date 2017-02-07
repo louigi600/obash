@@ -47,9 +47,9 @@ Although the whereabouts from where they are retreaved is tracable and I make no
 
 
 The actual AES encoding:
-The part that does the actual AES encoding came right out of the openssl symmetric encription xample from their wiki. It was well docuented and easy to reuse and that's what I did.
+The part that does the actual AES encoding came right out of the openssl symmetric encription xample from their wiki with very minor changes. It was well docuented and easy to reuse and that's what I did.
 See openssl wiki: https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
-The main part if the example went into mk_sh_c function wile the encoding and decoding functions were left pretty much untouched.
+The main part if the example went into mk_sh_c function wile the encoding and decoding functions were left pretty much untouched. The only thing I recall changing was substituting OPENSSL_config with OPENSSL_no_config to avoid not finding openssl.cnf in the same place as where the reusable static binary was built, it's not neaded anyway for AES Symmetric Encryption and Decryption.
 
 Is this foolproof:
 Just like shc it is still possible to extract the script it's just a that at least it's not as easy as "ps -ef" (no joke see further down for the output of ps -ef on a shc encoded script) for any lenthy script.

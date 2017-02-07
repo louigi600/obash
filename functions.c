@@ -240,7 +240,8 @@ int mk_sh_c ( char *infilename, char *key, char *iv )
 /* Initialise the openssl library */
   ERR_load_crypto_strings();
   OpenSSL_add_all_algorithms();
-  OPENSSL_config(NULL);
+//  OPENSSL_config(NULL);
+  OPENSSL_no_config();
 
 /* reading infile into plaintext */
   if((rb=fread(plaintext,1,insize,infile))!=insize)
