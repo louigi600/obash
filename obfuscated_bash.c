@@ -100,7 +100,7 @@ int usage(char *name, char *message, option *oa,int oalen)
     strcat(options,str);
   }
 
-  printf("Usage:\n%s %s\n",name,options);
+  printf("Usage:\n%s %s <input filename>\n",name,options);
 
   for (i=0;i<oalen;i++)
   { if(oa[i].option_type==0) printf("-%c \t\t: %s\n",oa[i].option_shortname,oa[i].option_helptext);
@@ -126,28 +126,91 @@ int main(int argc, char *argv[])
   "the Free Software Foundation; either version 2 of the License, or\n"
   "(at your option) any later version provided that no poit of the\n"
   "AA License is violated.\n";
-  
+/* these variables are for getopt and the extension */
+  int c;
+  opterr = 0;
+  option optionarray[4] = {
+    {'c',0,"Cleanup intermediate c files on success.",false,""},
+    {'h',0,"How this help message.",false,""},
+    {'o',1,"Output filename.",false,""},
+    {'r',0,"Create a static reusable binary.",false,""},
+  };
+//  char optstring[80]="\0";   
+  char optstring[256]="\0";   
+  int i;
+/* str is already defines as pointer to char and there is a mallog allocating 256 bytes for it, we should be ok to use the one already defined */
+//  char str[80]="\0";
+/* end variables for getopt */
+  char input_filename[256]="\0",output_filename[256]="\0";
+  str=malloc(256);
+
+/*parsing options */
+  for (i=0;i<sizeof(optionarray)/sizeof(option);i++)
+  { if(optionarray[i].option_type==0) sprintf(str,"%c",optionarray[i].option_shortname);
+    else  sprintf(str,"%c:",optionarray[i].option_shortname);
+    strcat(optstring,str);
+  }
+
+  while ((c = getopt (argc, argv, optstring)) != -1)
+    switch (c)
+    { case 'c':
+      case 'r':
+        set_flag(c, optionarray, sizeof(optionarray)/sizeof(option));
+        break;
+      case 'h':
+        usage(argv[0],"\0",optionarray,sizeof(optionarray)/sizeof(option));
+      case 'o':
+        set_param(c,optarg,optionarray,sizeof(optionarray)/sizeof(option));
+        break;
+      case '?':
+        if (optopt == 'o') sprintf(str,"\nERROR: option `-%c' requires an argument.", optopt);
+        else if (isprint (optopt))  sprintf(str,"\nERROR: unknown option `-%c'.", optopt);
+        else  sprintf(str,"\nERROR: nknown option character `\\x%x'.", optopt);
+
+        usage(argv[0],str,optionarray,sizeof(optionarray)/sizeof(option));
+      default:
+        abort ();
+    }
+
+/* doing some sanity checks */
+  if(optind==argc) usage(argv[0],"\nERROR: no input file was provided.",optionarray,sizeof(optionarray)/sizeof(option));
+  sprintf(input_filename,"%s",argv[optind]);
+
+  if(!flag_status('o',optionarray,sizeof(optionarray)/sizeof(option))) sprintf(output_filename,"%s.x",argv[optind]);
+  else get_param(output_filename,'o',optionarray,sizeof(optionarray)/sizeof(option));
+  printf("Output filename: %s\n",output_filename);
+/* finished parsing options */  
 
 /* making sure input file is readable and then immediately closing it */
-  if((infile=fopen(argv[1],"r"))==NULL)
-  { printf("Error opening %s.\n",argv[1]);
+  if((infile=fopen(input_filename,"r"))==NULL)
+  { printf("Error opening %s.\n",input_filename);
     exit(1);
   } 
   fclose(infile);
 
-  str=malloc(256);
   getkey(key);
   getiv(iv);
-  if((ret=mk_sh_c(argv[1],key,iv))<0)
+  if((ret=mk_sh_c(input_filename,key,iv))<0)
   printf("Failed: %i/n",ret);
-  else printf("Created %s.c\n",argv[1]);
-  sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s.x -lssl -lcrypto && strip %s.x",argv[1],argv[1],argv[1]);
+  else printf("Created %s.c\n",input_filename);
+  sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -lssl -lcrypto && strip %s",input_filename,output_filename,output_filename);
 //  printf("%s\n",str); 
-  printf("Compiling %s.c ... ",argv[1]); 
+//  exit(0);
+  printf("Compiling %s.c ... ",input_filename); 
   if(system(str)!=0) 
   { printf("failed\n");
     exit(1);
-  } else printf("done\nOutput file is %s.x\n",argv[1]);
+  } else printf("done\nOutput file is %s.x\n",input_filename);
+
+/* if -c flag was issued cleaning up intermediate c file */
+  if(flag_status('c',optionarray,sizeof(optionarray)/sizeof(option))) 
+  { printf("Cleaning up intermediate c file: %s.c ... ",input_filename);
+    sprintf(str,"rm -f %s.c",input_filename);
+    if(system(str)!=0)
+    { printf("failed\n");
+      exit(1);
+    } else printf("done\n");
+  }
   return(0);
   printf("%s\n",copyright);
 }
