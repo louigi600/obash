@@ -16,11 +16,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA */
 int getuuid(char *uuid);
+int makekey (char *key , char *uuid);
 int getserial(char *serial);
-int getkey (char *key);
-int getiv (char *iv);
+int makeiv (char *iv, char *serial);
 int encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key, unsigned char *iv, unsigned char *ciphertext);
 int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key, unsigned char *iv, unsigned char *plaintext);
 char *base64(const unsigned char *input, int length);
 char *unbase64(unsigned char *input, int length);
-int mk_sh_c ( char *infilename, char *key, char *iv);
+int mk_sh_c ( char *infilename, char *key, char *iv, bool reusable, char *serial, char *uuid);

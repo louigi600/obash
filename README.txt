@@ -42,7 +42,7 @@ See recreate_interpreter_heade script for details on how interpreter.h is create
 
 
 Key and Inizialization Vector for AES-256 encoding:
-The key and iv are not hardcoded into the binary but are retreaved each time from the hardware (hence binding it to a machine).
+The key and iv are not hardcoded into the binary (unless you decide to build a reusable static binary with -r flag) but are retreaved each time from the hardware (hence binding it to a machine).
 Although the whereabouts from where they are retreaved is tracable and I make no secret of it (machine uuid and srial number) these should be then manipulated in a way that they are not directly usable as is. In the code there is a comment suggestng where this should be done: each and every one of you using obash is encouraged to do so. As an example I strip "-" from the uuid and pad short serial numbers to reach the suggested lenght for the cipher used. Look in sections "Suggestions for key and iv Scrambling"
 
 

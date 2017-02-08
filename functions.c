@@ -51,31 +51,9 @@ int getuuid(char *uuid)
   return strlen(uuid); 
 }
 
-int getkey (char *key)
-{ FILE *filepointer;
-  int i=0,rb=0;
-  char uuid[40]="\0";
-  char *s, *end;
-
-/* attempt to open sys produtc uuid */
-  if((filepointer=fopen(prod_uuid,"r"))==NULL)
-  { 
-/*  get uuid via sys failed using dmidecode */
-    if((filepointer=popen("dmidecode -s system-uuid","r"))==NULL)
-    { return(-1); /*failed running dmidecode*/ 
-    }
-/*  read uuid or exit on error */
-    if((rb=fread(uuid,1,36,filepointer))!=36)
-    { return(-2); /*could not read enough data from "dmidecode -s system-uuid"*/
-    } else pclose(filepointer);
-    
-  } else
-  {
-/* get uuid from /sys .... */
-    if((rb=fread(uuid,1,36,filepointer))!=36)
-    { return(-3); /*could not read enough data from prod_uuid*/
-    } else fclose(filepointer); 
-  }
+int makekey (char *key , char *uuid)
+{ int i=0;
+  char *s, *end; 
 
 /* where you get the uuid is tracable via strace or by strings */
 /* so now is a good time to manipulate the uuid so that  */
@@ -87,6 +65,8 @@ int getkey (char *key)
   { if ( *s != '-') key[i++]=*s;
     s++;
   }
+
+//  printf("uuid stripped of '-': %s\n",key);
   return strlen(key);
 }
 
@@ -94,6 +74,7 @@ int getserial(char *serial)
 { FILE *filepointer;
   int rb=0;
   char *s, *end;
+  char buff[17]="\0";
 
   /* attempt to open sys produtc serial */
   if((filepointer=fopen(prod_serial,"r"))==NULL)
@@ -104,62 +85,43 @@ int getserial(char *serial)
     { return(-1); /* failed running dmidecode */
     }
 /*  read serial or exit on error */
-    rb=fread(serial,1,16,filepointer);
+    rb=fread(buff,1,16,filepointer);
     pclose(filepointer);
   } else
   {
 /* read serial or exit on error */
-    rb=fread(serial,1,16,filepointer);
+    rb=fread(buff,1,16,filepointer);
     fclose(filepointer);
   }
 
 /* dealing with not enough data in serial */
   if(rb<1)
-  { /*if you gein in here nothing was read so migh as well just give up */
+  { /*if you get in in here nothing was read so migh as well just give up */
     printf("Insufficient data to identify.\n");
     exit(1);
   }
 
+/* dealing with less data read the expected */
+  if(rb!=16) strncpy(serial,buff,rb-1);
+  else strcpy(serial,buff);
+  serial[rb]=0;
   return strlen(serial);
 }
 
-int getiv (char *iv)
+int makeiv (char *iv, char *serial)
 { FILE *filepointer;
   int rb=0;
-  char serial[20]="\0";
   char *s, *end;
 
-/* attempt to open sys produtc serial */
-  if((filepointer=fopen(prod_serial,"r"))==NULL)
-  { //printf("File open error. Will attempt to use dmidecode.\n");
-
-/*  get serial via sys failed using dmidecode */
-    if((filepointer=popen("dmidecode -s system-serial-number","r"))==NULL)
-    { return(-1); /* failed running dmidecode */
-    }
-/*  read serial or exit on error */
-    rb=fread(serial,1,16,filepointer);
-    pclose(filepointer);
-  } else
-  {
-/* read serial or exit on error */
-    rb=fread(serial,1,16,filepointer);
-    fclose(filepointer);
-  }
-
-/* dealing with not enough data in serial */
-  if(rb<1)
-  { /*if you gein in here nothing was read so migh as well just give up */
-    printf("Insufficient data to identify.\n");
-    exit(1);
-  }
-
 /* if necessary padding iv to reach the advised lenght for the chipher */
+  rb=strlen(serial);
+//  printf("Serial lenght: %i\n",rb);
   if(rb!=16)
   { strncat(iv,serial,rb-1);
     if(rb<9)  strncat(iv,prod_serial,17-rb);
     strncat(iv,serial,17-rb);
   } else strcpy(iv,serial);
+
   return strlen(iv);
 }
 
@@ -266,7 +228,7 @@ char *base64(const unsigned char *input, int length)
   return buff;
 }
 
-int mk_sh_c ( char *infilename, char *key, char *iv )
+int mk_sh_c ( char *infilename, char *key, char *iv , bool reusable, char *serial, char *uuid)
 { unsigned char *plaintext, *ciphertext, *b64ctx;
   char *outfilename;
   FILE *infile,*outfile;
@@ -350,6 +312,35 @@ int mk_sh_c ( char *infilename, char *key, char *iv )
 /* closing the definition of static ciphertext variable */
   fwrite(";\n",1,2,outfile);
 
+/*writing the uuid and serial static variables */
+if(reusable)
+{ printf("Creating reusable intermadiate c file\n");
+  fwrite("unsigned char uuid[37]=",1,23,outfile);
+  fputc(34,outfile);
+  fwrite(uuid,1,strlen(uuid),outfile);
+  fputc(34,outfile);
+  fwrite(";\n",1,2,outfile);
+  fwrite("unsigned char serial[17]=",1,25,outfile);
+  fputc(34,outfile);
+  fwrite(serial,1,strlen(serial),outfile);
+  fputc(34,outfile);
+  fwrite(";\n",1,2,outfile);
+} else
+{ printf("Creating non reusable binary\n"); 
+  fwrite("unsigned char uuid[37]=",1,23,outfile);
+  fputc(34,outfile);
+  fputc(92,outfile); 
+  fputc('0',outfile); 
+  fputc(34,outfile);
+  fwrite(";\n",1,2,outfile);
+
+  fwrite("unsigned char serial[17]=",1,25,outfile);
+  fputc(34,outfile);
+  fputc(92,outfile);
+  fputc('0',outfile);
+  fputc(34,outfile);
+  fwrite(";\n",1,2,outfile);
+}
 /* writing the functions in the outfile */
   fwrite(functions,1,strlen(functions),outfile);
   fwrite("\n",1,1,outfile);

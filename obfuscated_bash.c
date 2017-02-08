@@ -146,6 +146,7 @@ int main(int argc, char *argv[])
   char uuid[37]="\0";
   char serial[17]="\0";
   char hex_digits[17]="0123456789abcdef\0";
+  bool reusable_build=false;
 
   str=malloc(256);
 
@@ -211,20 +212,28 @@ int main(int argc, char *argv[])
           break;
       }
     }
+    uuid[sizeof(uuid)-1]='\0';
+    printf("Random uuid: %s\n",uuid);
     for(i=0;i<sizeof(serial)-1;i++)
     { c=(unsigned char) (rand() % 16);
       serial[i]=hex_digits[c];
     }
-    printf("Random uuid: %s\nRandom serial: %s\n",uuid,serial);
+    serial[sizeof(serial)-1]='\0';
+    printf("Random serial: %s\n",serial);
+    reusable_build=true; 
   } else 
-  { getuuid(uuid);
-    getserial(serial);
-    printf("Machine uuid: %s\nMachine serial: %s\n",uuid,serial);
+  { c=getuuid(uuid);
+    printf("Machine uuid: %s of lenght %i\n",uuid,c);
+    c=getserial(serial);
+    printf("Machine serial: %s of length %i\n",serial,c);
   }
-  
-  getkey(key);
-  getiv(iv);
-  if((ret=mk_sh_c(input_filename,key,iv))<0)
+ 
+//  printf("About to make key ... "); 
+  makekey(key,uuid);
+  printf("Used key: >%s<\n",key);
+  makeiv(iv,serial);
+  printf("Used IV: >%s<\n",iv);
+  if((ret=mk_sh_c(input_filename,key,iv,reusable_build,serial,uuid))<0)
   printf("Failed: %i/n",ret);
   else printf("Created %s.c\n",input_filename);
   printf("Compiling %s.c ",input_filename);
