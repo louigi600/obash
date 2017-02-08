@@ -28,13 +28,17 @@ obash <source bash script>
 will produce a binary executable with ".x" suffixed to the input script name.
 Just run <source bash script>.x as you would with the <source bash script> itself.
 
+obash -h 
+will show a short help message for it's very few flags and parameters.
+
 
 How it works internally:
 obbash takes the input script and aes-256 encodes it, and also base64 encodes the aes cipertex so that it can be used to declare an unsigned char array.
 It then produces an intermediate c file which is basically the interpreter (see interpreter.c) , functions, text array containing the cipher text and the main. The intermediate c file is then compiled into an exacutable.
 The intermediate c file is built in the following manner (see mk_sh_c function in functions.c):
 includes block from interpreter.h
-crypted_script variable containing the base64 aes-256 encoded script 
+crypted_script variable containing the base64 aes-256 encoded script
+serial and uuid variables (empty if non reusable) 
 functions block from interpreter.h
 main_body block from interpreter.h
 
@@ -42,8 +46,8 @@ See recreate_interpreter_heade script for details on how interpreter.h is create
 
 
 Key and Inizialization Vector for AES-256 encoding:
-The key and iv are not hardcoded into the binary (unless you decide to build a reusable static binary with -r flag) but are retreaved each time from the hardware (hence binding it to a machine).
-Although the whereabouts from where they are retreaved is tracable and I make no secret of it (machine uuid and srial number) these should be then manipulated in a way that they are not directly usable as is. In the code there is a comment suggestng where this should be done: each and every one of you using obash is encouraged to do so. As an example I strip "-" from the uuid and pad short serial numbers to reach the suggested lenght for the cipher used. Look in sections "Suggestions for key and iv Scrambling"
+The key and iv are not hardcoded into the binary (unless you decide to build a reusable static binary with -r flag) but are retreaved each time from the hardware (hence binding it to a machine). In case of a reusable static binary (built wit -r flag) then the uuid and serial are in the binary itself but will be manipulated anyway by makekey and makeiv so that they are not usable immediately should anyone ever inspect the binary itself.
+Although the whereabouts from where the serian and uuid are retreaved is tracable and I make no secret of it (machine uuid and srial number for non reusable and random hex digits for reusable) these should be then manipulated in a way that they are not directly usable as is. In the code there is a comment suggestng where this should be done (see makekey and makeiv functions in functions.c): each and every one of you using obash is encouraged to do so. As an example I strip "-" from the uuid and pad short serial numbers to reach the suggested lenght for the cipher used. Look in sections "Suggestions for key and iv Scrambling"
 
 
 The actual AES encoding:
@@ -81,16 +85,19 @@ alter the case or add a constant to each char ....
 
 
 
-Just a note onn how I strip my personal key and iv scrambling stuff from the version I use myself
-diff -ubw functions.c  distributable/functions.c  > from_my_to_distributable.patch
-make distributable creates the directory, copies the code  and patches functions.c 
-
-
 Making a non restricted binary:
-I'm working on buiding a binary that can be used on machines different from the one it was obfuscated on. I don't want to hit the same limitations that shc has (where you need to be running fairly similar setup) so I'll go the static binary way. This is still work in progress.
+I'm working on buiding a binary that can be used on machines different from the one it was obfuscated on, provided the machines are bynary compatible in the first place and that the kernels and glibc are compatible too. I don't want to hit the same limitations that shc has (where you need to be running fairly similar setup) so I'll go the static binary way.
+This is still work in progress but I've been able to produfe reusable binaries ... just have not had mich time to test it to any extent.
 
+This is a note for the autor
 This produced a static binary with a warning:
 gcc -static testme.c -lssl -lcrypto -ldl -lltdl -static-libgcc
 
 /usr/lib64/gcc/x86_64-slackware-linux/5.3.0/../../../../lib64/libcrypto.a(dso_dlfcn.o): In function `dlfcn_globallookup':
 dso_dlfcn.c:(.text+0x11): warning: Using 'dlopen' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
+
+Just a note onn how I strip my personal key and iv scrambling stuff from the version I use myself
+diff -ubw functions.c  distributable/functions.c  > from_my_to_distributable.patch
+make distributable creates the directory, copies the code  and patches functions.c 
+
+
