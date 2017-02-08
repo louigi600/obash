@@ -21,6 +21,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
+#include <time.h>
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
@@ -32,9 +33,9 @@
 typedef struct option
 { char option_shortname;
   enum option_types { flag = 0, parameter = 1, } option_type;
-  char option_helptext[80];
+  char option_helptext[256];
   bool option_flag_status;
-  char option_param[80];
+  char option_param[256];
 } option;
 char prod_uuid[256]="/sys/devices/virtual/dmi/id/product_uuid";
 char prod_serial[256]="/sys/devices/virtual/dmi/id/product_serial";
@@ -142,6 +143,10 @@ int main(int argc, char *argv[])
 //  char str[80]="\0";
 /* end variables for getopt */
   char input_filename[256]="\0",output_filename[256]="\0";
+  char uuid[37]="\0";
+  char serial[17]="\0";
+  char hex_digits[17]="0123456789abcdef\0";
+
   str=malloc(256);
 
 /*parsing options */
@@ -188,6 +193,35 @@ int main(int argc, char *argv[])
   } 
   fclose(infile);
 
+/* generating random uuid and serial for reusable binary */
+  if(flag_status('r',optionarray,sizeof(optionarray)/sizeof(option)))
+  { srand ( time(NULL) );
+    for(i=0;i<sizeof(uuid)-1;i++)
+    { switch(i)
+      { case 8:
+        case 13:
+        case 18:
+        case 23:
+          c='-';
+          uuid[i]='-';
+          break;
+        default:
+          c=(unsigned char) (rand() % 16);
+          uuid[i]=hex_digits[c];
+          break;
+      }
+    }
+    for(i=0;i<sizeof(serial)-1;i++)
+    { c=(unsigned char) (rand() % 16);
+      serial[i]=hex_digits[c];
+    }
+    printf("Random uuid: %s\nRandom serial: %s\n",uuid,serial);
+  } else 
+  { getuuid(uuid);
+    getserial(serial);
+    printf("Machine uuid: %s\nMachine serial: %s\n",uuid,serial);
+  }
+  
   getkey(key);
   getiv(iv);
   if((ret=mk_sh_c(input_filename,key,iv))<0)

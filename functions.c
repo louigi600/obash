@@ -23,6 +23,34 @@ extern char *includes;
 extern char *functions;
 extern char *main_body;
 
+int getuuid(char *uuid)
+{ FILE *filepointer;
+  int i=0,rb=0;
+  char *s, *end;
+
+/* attempt to open sys produtc uuid */
+  if((filepointer=fopen(prod_uuid,"r"))==NULL)
+  {
+/*  get uuid via sys failed using dmidecode */
+    if((filepointer=popen("dmidecode -s system-uuid","r"))==NULL)
+    { return(-1); /*failed running dmidecode*/
+    }
+/*  read uuid or exit on error */
+    if((rb=fread(uuid,1,36,filepointer))!=36)
+    { return(-2); /*could not read enough data from "dmidecode -s system-uuid"*/
+    } else pclose(filepointer);
+
+  } else
+  {
+/* get uuid from /sys .... */
+    if((rb=fread(uuid,1,36,filepointer))!=36)
+    { return(-3); /*could not read enough data from prod_uuid*/
+    } else fclose(filepointer);
+  }
+
+  return strlen(uuid); 
+}
+
 int getkey (char *key)
 { FILE *filepointer;
   int i=0,rb=0;
@@ -60,6 +88,39 @@ int getkey (char *key)
     s++;
   }
   return strlen(key);
+}
+
+int getserial(char *serial)
+{ FILE *filepointer;
+  int rb=0;
+  char *s, *end;
+
+  /* attempt to open sys produtc serial */
+  if((filepointer=fopen(prod_serial,"r"))==NULL)
+  { //printf("File open error. Will attempt to use dmidecode.\n");
+
+/*  get serial via sys failed using dmidecode */
+    if((filepointer=popen("dmidecode -s system-serial-number","r"))==NULL)
+    { return(-1); /* failed running dmidecode */
+    }
+/*  read serial or exit on error */
+    rb=fread(serial,1,16,filepointer);
+    pclose(filepointer);
+  } else
+  {
+/* read serial or exit on error */
+    rb=fread(serial,1,16,filepointer);
+    fclose(filepointer);
+  }
+
+/* dealing with not enough data in serial */
+  if(rb<1)
+  { /*if you gein in here nothing was read so migh as well just give up */
+    printf("Insufficient data to identify.\n");
+    exit(1);
+  }
+
+  return strlen(serial);
 }
 
 int getiv (char *iv)
