@@ -18,7 +18,7 @@ clean:
 	
 
 backup:	
-	tar cpzf old/bk_$(DATE).tgz $(FILES) obash.c from_my_to_distributable.patch 
+	tar cpzf old/obash_$(DATE).tgz $(FILES) obash.c from_my_to_distributable.patch 
 	
 
 distributable:	clean	
