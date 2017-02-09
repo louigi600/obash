@@ -18,12 +18,12 @@ clean:
 	
 
 backup:	
-	tar cpzf old/bk_$(DATE).tgz $(FILES) obash.c from_my_to_distributable.patch 
+	tar cpzf old/obash_$(DATE).tgz $(FILES) obash.c from_my_to_distributable.patch 
 	
 
 distributable:	clean	
 	mkdir -p distributable/obash
-	cp -p $(FILES) distributable/obash
-	( cd distributable/obash ; ln -s obfuscated_bash.c obash.c ; patch -p1 < ../../from_my_to_distributable.patch ; rm *.orig )
+	cp -p $(FILES) testme distributable/obash
+	( cd distributable/obash ; ln -s obfuscated_bash.c obash.c ; patch -p1 < ../../from_my_to_distributable.patch ; rm -f *.orig )
 	
 

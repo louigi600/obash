@@ -19,6 +19,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
+#include <time.h>
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
@@ -27,14 +30,94 @@
 #include "functions.c"
 #include "interpreter.h"
 
+typedef struct option
+{ char option_shortname;
+  enum option_types { flag = 0, parameter = 1, } option_type;
+  char option_helptext[256];
+  bool option_flag_status;
+  char option_param[256];
+} option;
 char prod_uuid[256]="/sys/devices/virtual/dmi/id/product_uuid";
 char prod_serial[256]="/sys/devices/virtual/dmi/id/product_serial";
 char key[33]="\0";
 char iv[17]="\0";
 
+/* getopt extension functions for using an array of option as defined above */
+bool flag_status (char shortname,  option *oa, int oalen)
+{ int i;
+
+  for (i=0;i<oalen;i++)
+    if(oa[i].option_shortname==shortname && oa[i].option_flag_status) return(true);
+  return(false);
+}
+
+int set_flag (char shortname,  option *oa, int oalen)
+{ int i;
+
+  for (i=0;i<oalen;i++)
+    if(oa[i].option_shortname==shortname) oa[i].option_flag_status=true;
+}
+
+int set_param (char shortname, char *parameter, option *oa, int oalen)
+{ int i;
+
+  for (i=0;i<oalen;i++)
+    if(oa[i].option_shortname==shortname)
+    { strcpy(oa[i].option_param,parameter);
+      oa[i].option_flag_status=true;
+    }
+}
+
+/*return the element of optionarray containing the shortname flag/parameter */
+int who_has_shortname (char shortname,  option *oa, int oalen)
+{int i;
+
+  for (i=0;i<oalen;i++)
+    if(oa[i].option_shortname==shortname && oa[i].option_flag_status) return(i);
+
+  return(-1);
+}
+
+int get_param (char *param,  char shortname,  option *oa, int oalen)
+{ int i;
+
+  for (i=0;i<oalen;i++)
+  { if(oa[i].option_shortname==shortname && oa[i].option_flag_status)
+    { strcpy(param,oa[i].option_param);
+      return(i);
+    }
+  }
+  sprintf(param,"\0");
+  return(-1);
+}
+
+int usage(char *name, char *message, option *oa,int oalen)
+{ int i;
+  char str[80]="\0",options[80]="\0";
+
+  for (i=0;i<oalen;i++)
+  { if(oa[i].option_type==0) sprintf(str,"[-%c] ",oa[i].option_shortname);
+    else  sprintf(str,"[-%c <value>] ",oa[i].option_shortname);
+    strcat(options,str);
+  }
+
+  printf("Usage:\n%s %s <input filename>\n",name,options);
+
+  for (i=0;i<oalen;i++)
+  { if(oa[i].option_type==0) printf("-%c \t\t: %s\n",oa[i].option_shortname,oa[i].option_helptext);
+    else printf("-%c <value>\t: %s\n",oa[i].option_shortname,oa[i].option_helptext);
+  }
+
+  if(strlen(message)>0)
+  { fprintf(stderr,"%s\n",message);
+    exit(1);
+  } else exit(0);
+}
+/* getopt extentsion ends here */
+
 int main(int argc, char *argv[])
 { FILE *infile;
-  char string[256]="\0";
+//  char string[256]="\0";
   int ret;
   char *str;
   static const char *copyright="Obfuscated Bash\n"
@@ -44,26 +127,138 @@ int main(int argc, char *argv[])
   "the Free Software Foundation; either version 2 of the License, or\n"
   "(at your option) any later version provided that no poit of the\n"
   "AA License is violated.\n";
+/* these variables are for getopt and the extension */
+  int c;
+  opterr = 0;
+  option optionarray[4] = {
+    {'c',0,"Cleanup intermediate c files on success.",false,""},
+    {'h',0,"How this help message.",false,""},
+    {'o',1,"Output filename.",false,""},
+    {'r',0,"Create a static reusable binary.",false,""},
+  };
+//  char optstring[80]="\0";   
+  char optstring[256]="\0";   
+  int i;
+/* str is already defines as pointer to char and there is a mallog allocating 256 bytes for it, we should be ok to use the one already defined */
+//  char str[80]="\0";
+/* end variables for getopt */
+  char input_filename[256]="\0",output_filename[256]="\0";
+  char uuid[37]="\0";
+  char serial[17]="\0";
+  char hex_digits[17]="0123456789abcdef\0";
+  bool reusable_build=false;
+
+  str=malloc(256);
+
+/*parsing options */
+  for (i=0;i<sizeof(optionarray)/sizeof(option);i++)
+  { if(optionarray[i].option_type==0) sprintf(str,"%c",optionarray[i].option_shortname);
+    else  sprintf(str,"%c:",optionarray[i].option_shortname);
+    strcat(optstring,str);
+  }
+
+  while ((c = getopt (argc, argv, optstring)) != -1)
+    switch (c)
+    { case 'c':
+      case 'r':
+        set_flag(c, optionarray, sizeof(optionarray)/sizeof(option));
+        break;
+      case 'h':
+        usage(argv[0],"\0",optionarray,sizeof(optionarray)/sizeof(option));
+      case 'o':
+        set_param(c,optarg,optionarray,sizeof(optionarray)/sizeof(option));
+        break;
+      case '?':
+        if (optopt == 'o') sprintf(str,"\nERROR: option `-%c' requires an argument.", optopt);
+        else if (isprint (optopt))  sprintf(str,"\nERROR: unknown option `-%c'.", optopt);
+        else  sprintf(str,"\nERROR: nknown option character `\\x%x'.", optopt);
+
+        usage(argv[0],str,optionarray,sizeof(optionarray)/sizeof(option));
+      default:
+        abort ();
+    }
+
+/* doing some sanity checks */
+  if(optind==argc) usage(argv[0],"\nERROR: no input file was provided.",optionarray,sizeof(optionarray)/sizeof(option));
+  sprintf(input_filename,"%s",argv[optind]);
+
+  if(!flag_status('o',optionarray,sizeof(optionarray)/sizeof(option))) sprintf(output_filename,"%s.x",argv[optind]);
+  else get_param(output_filename,'o',optionarray,sizeof(optionarray)/sizeof(option));
+  printf("Output filename will be: %s\n",output_filename);
+/* finished parsing options */  
 
 /* making sure input file is readable and then immediately closing it */
-  if((infile=fopen(argv[1],"r"))==NULL)
-  { printf("Error opening %s.\n",argv[1]);
+  if((infile=fopen(input_filename,"r"))==NULL)
+  { printf("Error opening %s.\n",input_filename);
     exit(1);
   } 
   fclose(infile);
 
-  str=malloc(256);
-  getkey(key);
-  getiv(iv);
-  if((ret=mk_sh_c(argv[1],key,iv))<0)
+/* generating random uuid and serial for reusable binary */
+  if(flag_status('r',optionarray,sizeof(optionarray)/sizeof(option)))
+  { srand ( time(NULL) );
+    for(i=0;i<sizeof(uuid)-1;i++)
+    { switch(i)
+      { case 8:
+        case 13:
+        case 18:
+        case 23:
+          c='-';
+          uuid[i]='-';
+          break;
+        default:
+          c=(unsigned char) (rand() % 16);
+          uuid[i]=hex_digits[c];
+          break;
+      }
+    }
+    uuid[sizeof(uuid)-1]='\0';
+    printf("Random uuid: %s\n",uuid);
+    for(i=0;i<sizeof(serial)-1;i++)
+    { c=(unsigned char) (rand() % 16);
+      serial[i]=hex_digits[c];
+    }
+    serial[sizeof(serial)-1]='\0';
+    printf("Random serial: %s\n",serial);
+    reusable_build=true; 
+  } else 
+  { c=getuuid(uuid);
+    printf("Machine uuid: %s of lenght %i\n",uuid,c);
+    c=getserial(serial);
+    printf("Machine serial: %s of length %i\n",serial,c);
+  }
+ 
+//  printf("About to make key ... "); 
+  makekey(key,uuid);
+  printf("Used key: >%s<\n",key);
+  makeiv(iv,serial);
+  printf("Used IV: >%s<\n",iv);
+  if((ret=mk_sh_c(input_filename,key,iv,reusable_build,serial,uuid))<0)
   printf("Failed: %i/n",ret);
-  else printf("Created %s.c\n",argv[1]);
-  sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s.x -lssl -lcrypto && strip %s.x",argv[1],argv[1],argv[1]);
+  else printf("Created %s.c\n",input_filename);
+  printf("Compiling %s.c ",input_filename);
+  if(flag_status('r',optionarray,sizeof(optionarray)/sizeof(option)))
+  { printf("as static reusable binary ");
+    sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -static -lssl -lcrypto -ldl -lltdl -static-libgcc && strip %s",input_filename,output_filename,output_filename);
+  } else sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -lssl -lcrypto && strip %s",input_filename,output_filename,output_filename);
 //  printf("%s\n",str); 
-  printf("Compiling %s.c ... ",argv[1]); 
+//  exit(0);
+  printf("... ",input_filename); 
   if(system(str)!=0) 
   { printf("failed\n");
     exit(1);
-  } else printf("done\nOutput file is %s.x\n",argv[1]);
+  } else printf("done\n");
+
+/* if -c flag was issued cleaning up intermediate c file */
+  if(flag_status('c',optionarray,sizeof(optionarray)/sizeof(option))) 
+  { printf("Cleaning up intermediate c file: %s.c ... ",input_filename);
+    sprintf(str,"rm -f %s.c",input_filename);
+    if(system(str)!=0)
+    { printf("failed\n");
+      exit(1);
+    } else printf("done\n");
+  }
+  printf("Output filename: %s\n",output_filename);
   return(0);
+  printf("%s\n",copyright);
 }
