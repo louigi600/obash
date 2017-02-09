@@ -300,7 +300,7 @@ int mk_sh_c ( char *infilename, char *key, char *iv , bool reusable, char *seria
     fputc(34,outfile); 
     fputc(10,outfile); 
   }
-  if((i*65)<<strlen(b64ctx))
+  if((i*65)< strlen(b64ctx))
   { fputc(34,outfile);
     fwrite(b64ctx+(65*i),1,strlen(b64ctx)-(65*i),outfile);
     fputc(92,outfile);

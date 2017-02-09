@@ -87,7 +87,8 @@ alter the case or add a constant to each char ....
 
 Making a non restricted binary:
 I'm working on buiding a binary that can be used on machines different from the one it was obfuscated on, provided the machines are bynary compatible in the first place and that the kernels and glibc are compatible too. I don't want to hit the same limitations that shc has (where you need to be running fairly similar setup) so I'll go the static binary way.
-This is still work in progress but I've been able to produfe reusable binaries ... just have not had mich time to test it to any extent.
+This is still work in progress but I've been able to produfe reusable binaries ... just have not had mich time to test it to any extent. The testme script has been obfuscated with -r oprion on a system with kernel 4.4 and glibc 2.17: the bynary produced was able to run on older systems like Ubuntu 10.04 and RHEL 6. The cut, so far, seems to be on kernel that needs to be 2.6.32 or above. 
+I've not made any testing the other way waround (compiling on a really old system as seing what happens on newer system).
 
 This is a note for the autor
 This produced a static binary with a warning:
