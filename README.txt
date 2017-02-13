@@ -2,16 +2,19 @@ WHY obfuscate shell scripts:
 It's generally not a good idea to obfuscate shell scripts, as it burdens maintenance and seriously impedes debugging, but none the less, there may be circumstances where you might want to obfuscate what's being done, and/or some sensitive data in the script itself. Mind you that obfuscated self executing scrips are not as safe as you might want: they have inside them the code to extract the obfuscated script, so any determined person, with time to spare, can extract the script from them. How long that takes depends on the determination, time to spare and how well the obfuscator was made.
 
 
+
 WHY this project:
 You might be asking: "Why on earth did you not just use shc ?"
 Well in my opinion shc has some short comings which are critical for me:
-1) any lenthy script can be seen in clear text (with some formatting issues) with ps
-2) apparently shc has hardcoded key in the binary which makes it relatively easy to extract the script (this may have been fixed)
-3) what I do with interpreter.h shc has hardcoded in the sources making it harder to maintain the interpreter part
+1) any lengthy script can be seen in clear text (with some formatting issues) with ps
+2) apparently shc has hard-coded key in the binary which makes it relatively easy to extract the script (this may have been fixed)
+3) what I do with interpreter.h shc has hard-coded in the sources making it harder to maintain the interpreter part
 
 The former of these not only defeats having used shc in the first place but also makes an unholy mess of the output of ps.
 
-If I was any better at programng (and mind you I'm a system administrator not a developer) I'd have probabbly fixed shc but I was unable to figure out the inner workings of shc (altough in principle it should be fairly similar to obash) by reading the code/documentation so I gave up on that. I tried contacting the author of shc but that was a no go too. I was intrested on ccsh but the 50 buck pricetag killed it so I gave birth to obash ... and yes unlike shc obash is only meant for bash scripts but could be made to work on other interpreters with a little editing.
+If I was any better at programing (and mind you I'm a system administrator not a developer) I'd have probably fixed shc but I was unable to figure out the inner workings of shc (although in principle it should be fairly similar to
+obash) by reading the code/documentation so I gave up on that. I tried contacting the author of shc but that was a no go too. I was interested on CCsh but the 50 buck price-tag killed it so I gave birth to obash ... and yes unlike shc, obash is only meant for bash scripts but could be made to work on other interpreters with a little editing.
+
 
 
 Build:
@@ -32,38 +35,44 @@ obash -h
 will show a short help message for it's very few flags and parameters.
 
 
+
 How it works internally:
-obbash takes the input script and aes-256 encodes it, and also base64 encodes the aes cipertex so that it can be used to declare an unsigned char array.
-It then produces an intermediate c file which is basically the interpreter (see interpreter.c) , functions, text array containing the cipher text and the main. The intermediate c file is then compiled into an exacutable.
+obash takes the input script and aes-256 encodes it, and also base64 encodes the AES cipertex so that it can be used to declare an unsigned char array.
+It then produces an intermediate c file which is basically the interpreter (see interpreter.c) , functions, text array containing the cipher text and the main. The intermediate c file is then compiled into an executable.
 The intermediate c file is built in the following manner (see mk_sh_c function in functions.c):
 includes block from interpreter.h
 crypted_script variable containing the base64 aes-256 encoded script
-serial and uuid variables (empty if non reusable) 
+serial and uuid variables (empty if non reusable)
 functions block from interpreter.h
 main_body block from interpreter.h
 
-See recreate_interpreter_heade script for details on how interpreter.h is created from interpreter.c.
+
+See recreate_interpreter_header script for details on how interpreter.h is created from interpreter.c.
 
 
-Key and Inizialization Vector for AES-256 encoding:
-The key and iv are not hardcoded into the binary (unless you decide to build a reusable static binary with -r flag) but are retreaved each time from the hardware (hence binding it to a machine). In case of a reusable static binary (built wit -r flag) then the uuid and serial are in the binary itself but will be manipulated anyway by makekey and makeiv so that they are not usable immediately should anyone ever inspect the binary itself.
-Although the whereabouts from where the serian and uuid are retreaved is tracable and I make no secret of it (machine uuid and srial number for non reusable and random hex digits for reusable) these should be then manipulated in a way that they are not directly usable as is. In the code there is a comment suggestng where this should be done (see makekey and makeiv functions in functions.c): each and every one of you using obash is encouraged to do so. As an example I strip "-" from the uuid and pad short serial numbers to reach the suggested lenght for the cipher used. Look in sections "Suggestions for key and iv Scrambling"
+
+Key and Initialization Vector for AES-256 encoding:
+The key and iv are not hard-coded into the binary (unless you decide to build a reusable static binary with -r flag) but are retrieved each time from the hardware (hence binding it to a machine). In case of a reusable static binary (built wit -r flag) then the uuid and serial are in the binary itself but will be manipulated anyway by makekey and makeiv so that they are not usable immediately should anyone ever inspect the binary itself.
+Although the whereabouts from where the serial and uuid are retrieved is traceable and I make no secret of it (machine uuid and srial number for non reusable and random hex digits for reusable) these should be then manipulated in a way that they are not directly usable as is. In the code there is a comment suggesting where this should be done (see makekey and makeiv functions in functions.c): each and every one of you using obash is encouraged to do so. As an example I strip "-" from the uuid and pad short serial numbers to reach the suggested length for the cipher used. Look in sections "Suggestions for key and iv Scrambling"
+
 
 
 The actual AES encoding:
-The part that does the actual AES encoding came right out of the openssl symmetric encription xample from their wiki with very minor changes. It was well docuented and easy to reuse and that's what I did.
-See openssl wiki: https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption
-The main part if the example went into mk_sh_c function wile the encoding and decoding functions were left pretty much untouched. The only thing I recall changing was substituting OPENSSL_config with OPENSSL_no_config to avoid not finding openssl.cnf in the same place as where the reusable static binary was built, it's not neaded anyway for AES Symmetric Encryption and Decryption.
+The part that does the actual AES encoding came right out of the Openssl symmetric encryption example from their wiki with very minor changes. It was well documented and easy to reuse and that's what I did.
+See Openssl wiki: https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption 
+The main part if the example went into mk_sh_c function wile the encoding and decoding functions were left pretty much untouched. The only thing I recall changing was substituting OPENSSL_config with OPENSSL_no_config to avoid not finding openssl.cnf in the same place as where the reusable static binary was built, it's not needed anyway for AES Symmetric Encryption and Decryption.
+
+
 
 Is this foolproof:
-Just like shc it is still possible to extract the script it's just a that at least it's not as easy as "ps -ef" (no joke see further down for the output of ps -ef on a shc encoded script) for any lenthy script.
+Just like shc it is still possible to extract the script it's just a that at least it's not as easy as "ps -ef" (no joke see further down for the output of ps -ef on a shc encoded script) for any lengthy script.
 
 I've made several attempts to omit using named pipe (which introduces an intrinsic weakness) and each time I hit the same limitation: only non iteractive scripts work right because stdin gets broken wnen the child remaps stdin to read from pipe with dup2.
 If you have any suggestions on how to avoid this please contact me <louigi600 (at) yahoo (dot) it>.
 
-Having to use maned pipes introduces a weakness which can be exploited by writing some imple code. What you need to do is watche for any newly created pipe in /tmp and dump them before the obash reader child empties them. This will not work work every time but you can loop untill you succeed eventually (miracle of multitasking).
+Having to use maned pipes introduces a weakness which can be exploited by writing some simple code. What you need to do is watch for any newly created pipe in /tmp and dump them before the obash reader child empties them. This will not work work every time but you can loop until you succeed eventually (miracle of multitasking).
 
-There is another approach that could be used to extract the cleartext script: look at the binary and try to figure out how the key and iv are  scrambled from  uuid and serial number, which in the distributed version is rather simple (and I encourage people to make their personal changes). Once you have key and iv  that are used you could then base64 decode and aes-256-cdc decode the crypted_script vasiable content. If you have the code with wich the obash binary was buildt on, you can obviously extract the script from the bins (but you should also have the sources in that case).
+There is another approach that could be used to extract the clear-text script: look at the binary and try to figure out how the key and iv are  scrambled from  uuid and serial number, which in the distributed version is rather simple (and I encourage people to make their personal changes). Once you have key and iv  that are used you could then base64 decode and aes-256-cdc decode the crypted_script vasiable content. If you have the code with witch the obash binary was built on, you can obviously extract the script from the bins (but you should also have the sources in that case).
 
 I regard this as being better then seing the clear text script with "ps -ef" with basically just some formatting issues and some blank prefix.
 See the output of a simple "ps -ef | grep <name of the shc encoded script> : (I copied in also the blank pefix so scroll down a little)
@@ -90,9 +99,9 @@ I'm working on buiding a binary that can be used on machines different from the 
 This is still work in progress but I've been able to produfe reusable binaries ... just have not had mich time to test it to any extent. The testme script has been obfuscated with -r oprion on a system with kernel 4.4 and glibc 2.17: the bynary produced was able to run on older systems like Ubuntu 10.04 and RHEL 6. The cut, so far, seems to be on kernel that needs to be 2.6.32 or above. 
 I've not made any testing the other way waround (compiling on a really old system as seing what happens on newer system).
 
-This is a note for the autor
+This is a note for the author
 This produced a static binary with a warning:
-gcc -static testme.c -lssl -lcrypto -ldl -lltdl -static-libgcc
+gcc -static testme.c -lssl -lcrypto -ldl -static-libgcc
 
 /usr/lib64/gcc/x86_64-slackware-linux/5.3.0/../../../../lib64/libcrypto.a(dso_dlfcn.o): In function `dlfcn_globallookup':
 dso_dlfcn.c:(.text+0x11): warning: Using 'dlopen' in statically linked applications requires at runtime the shared libraries from the glibc version used for linking
