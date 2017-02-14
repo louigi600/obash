@@ -264,6 +264,13 @@ int main(int argc, char *argv[])
     } else printf("done\n");
   }
   printf("Output filename: %s\n",output_filename);
+
+//#ifdef __linux__
+//  printf("You are a linux freak\n");
+//#else
+//  printf("You are not a linux freak\n");
+//#endif
+
   return(0);
   printf("%s\n",copyright);
 }

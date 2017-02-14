@@ -31,15 +31,28 @@ int getuuid(char *uuid)
 /* attempt to open sys produtc uuid */
   if((filepointer=fopen(prod_uuid,"r"))==NULL)
   {
-/*  get uuid via sys failed using dmidecode */
+
+#ifdef __linux__
+/*  get uuid via sys failed using dmidecode on linux */
     if((filepointer=popen("dmidecode -s system-uuid","r"))==NULL)
     { return(-1); /*failed running dmidecode*/
     }
+#elif __APPLE__
+/*  get uuid  via system_profiler on mac osx */
+    if((filepointer=popen("system_profiler SPHardwareDataType | awk '/UUID/ { print $3; }'","r"))==NULL)
+    { return(-1); /*failed running dmidecode*/
+    }
+#else
+    printf("Unsupported platform\n");
+    return(-1);
+#endif
+
+
 /*  read uuid or exit on error */
     if((rb=fread(uuid,1,36,filepointer))!=36)
     { return(-2); /*could not read enough data from "dmidecode -s system-uuid"*/
     } else pclose(filepointer);
-
+    
   } else
   {
 /* get uuid from /sys .... */
