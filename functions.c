@@ -40,7 +40,7 @@ int getuuid(char *uuid)
 #elif __APPLE__
 /*  get uuid  via system_profiler on mac osx */
     if((filepointer=popen("system_profiler SPHardwareDataType | awk '/UUID/ { print $3; }'","r"))==NULL)
-    { return(-1); /*failed running dmidecode*/
+    { return(-1); /*failed running system_profiler */
     }
 #else
     printf("Unsupported platform\n");
@@ -93,10 +93,21 @@ int getserial(char *serial)
   if((filepointer=fopen(prod_serial,"r"))==NULL)
   { //printf("File open error. Will attempt to use dmidecode.\n");
 
-/*  get serial via sys failed using dmidecode */
+#ifdef __linux__
+/*  get serial via sys failed using dmidecode on linux */
     if((filepointer=popen("dmidecode -s system-serial-number","r"))==NULL)
     { return(-1); /* failed running dmidecode */
     }
+#elif __APPLE__
+/*  get serial via system_profiler on mac osx */
+    if((filepointer=popen("system_profiler SPHardwareDataType | awk '/Serial Number/ { print $4 }'","r"))==NULL)
+    { return(-1); /* failed running system_profiler */
+    }
+#else
+    printf("Unsupported platform\n");
+    return(-1);
+#endif    
+
 /*  read serial or exit on error */
     rb=fread(buff,1,16,filepointer);
     pclose(filepointer);
