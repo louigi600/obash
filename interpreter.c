@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 //  printf("Used iv: >%s<\n",iv);
 
 /* NB: crypted_script is a variable not defined in here but is injectec into the trasition c source before compilinh the binary version */
-//  printf("lenght of the crypted script: %i\n",strlen(crypted_script));
+//  printf("length of the crypted script: %i\n",strlen(crypted_script));
 
   ctx=malloc(strlen(crypted_script));
   plaintext=malloc(strlen(crypted_script));

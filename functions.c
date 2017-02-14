@@ -113,9 +113,9 @@ int makeiv (char *iv, char *serial)
   int rb=0;
   char *s, *end;
 
-/* if necessary padding iv to reach the advised lenght for the chipher */
+/* if necessary padding iv to reach the advised length for the chipher */
   rb=strlen(serial);
-//  printf("Serial lenght: %i\n",rb);
+//  printf("Serial length: %i\n",rb);
   if(rb!=16)
   { strncat(iv,serial,rb-1);
     if(rb<9)  strncat(iv,prod_serial,17-rb);

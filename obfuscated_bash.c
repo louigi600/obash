@@ -227,7 +227,7 @@ int main(int argc, char *argv[])
     reusable_build=true; 
   } else 
   { c=getuuid(uuid);
-    printf("Machine uuid: %s of lenght %i\n",uuid,c);
+    printf("Machine uuid: %s of length %i\n",uuid,c);
     c=getserial(serial);
     printf("Machine serial: %s of length %i\n",serial,c);
   }
