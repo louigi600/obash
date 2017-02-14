@@ -130,11 +130,12 @@ int main(int argc, char *argv[])
 /* these variables are for getopt and the extension */
   int c;
   opterr = 0;
-  option optionarray[4] = {
+  option optionarray[5] = {
     {'c',0,"Cleanup intermediate c files on success.",false,""},
     {'h',0,"How this help message.",false,""},
     {'o',1,"Output filename.",false,""},
-    {'r',0,"Create a static reusable binary.",false,""},
+    {'r',0,"Create a reusable binary.",false,""},
+    {'s',0,"Create a statc binary.",false,""},
   };
 //  char optstring[80]="\0";   
   char optstring[256]="\0";   
@@ -161,6 +162,9 @@ int main(int argc, char *argv[])
     switch (c)
     { case 'c':
       case 'r':
+        set_flag(c, optionarray, sizeof(optionarray)/sizeof(option));
+        break;
+      case 's':
         set_flag(c, optionarray, sizeof(optionarray)/sizeof(option));
         break;
       case 'h':
@@ -237,9 +241,10 @@ int main(int argc, char *argv[])
   printf("Failed: %i/n",ret);
   else printf("Created %s.c\n",input_filename);
   printf("Compiling %s.c ",input_filename);
-  if(flag_status('r',optionarray,sizeof(optionarray)/sizeof(option)))
-  { printf("as static reusable binary ");
-    sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -static -lssl -lcrypto -ldl -lltdl -static-libgcc && strip %s",input_filename,output_filename,output_filename);
+  if(flag_status('s',optionarray,sizeof(optionarray)/sizeof(option)))
+  { printf("as static binary ");
+//    sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -static -lssl -lcrypto -ldl -lltdl -static-libgcc && strip %s",input_filename,output_filename,output_filename);
+    sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -static -lssl -lcrypto -ldl -static-libgcc && strip %s",input_filename,output_filename,output_filename);
   } else sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -lssl -lcrypto && strip %s",input_filename,output_filename,output_filename);
 //  printf("%s\n",str); 
 //  exit(0);
