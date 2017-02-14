@@ -19,7 +19,7 @@ int getuuid(char *uuid);
 int makekey (char *key , char *uuid);
 int getserial(char *serial);
 int makeiv (char *iv, char *serial);
-int encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key, unsigned char *iv, unsigned char *ciphertext);
+int obencrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key, unsigned char *iv, unsigned char *ciphertext);
 int decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *key, unsigned char *iv, unsigned char *plaintext);
 char *base64(const unsigned char *input, int length);
 char *unbase64(unsigned char *input, int length);
