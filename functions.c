@@ -125,7 +125,7 @@ int makeiv (char *iv, char *serial)
   return strlen(iv);
 }
 
-int encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key, unsigned char *iv, unsigned char *ciphertext)
+int obencrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key, unsigned char *iv, unsigned char *ciphertext)
 { EVP_CIPHER_CTX *ctx;
   int len;
   int ciphertext_len;
@@ -270,7 +270,7 @@ int mk_sh_c ( char *infilename, char *key, char *iv , bool reusable, char *seria
   return(-3); /*did not read the entire infile */ 
 
 /* encripting plaintext into ciphertext */
-  ctsize=encrypt (plaintext,insize,key,iv,ciphertext); 
+  ctsize=obencrypt (plaintext,insize,key,iv,ciphertext); 
   b64ctx=base64(ciphertext,ctsize);
   
 

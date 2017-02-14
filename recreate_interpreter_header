@@ -1,3 +1,4 @@
+#!/bin/bash
 ( echo -n 'char *includes='
   grep -hE "^#include|^#gv " interpreter.c functions.c | \
     sort -u | \
