@@ -52,7 +52,7 @@ See recreate_interpreter_header script for details on how interpreter.h is creat
 
 
 Key and Initialization Vector for AES-256 encoding:
-The key and iv are not hard-coded into the binary (unless you decide to build a reusable static binary with -r flag) but are retrieved each time from the hardware (hence binding it to a machine). In case of a reusable static binary (built wit -r flag) then the uuid and serial are in the binary itself but will be manipulated anyway by makekey and makeiv so that they are not usable immediately should anyone ever inspect the binary itself.
+The key and iv are not hard-coded into the binary (unless you decide to build a reusable binary with -r flag) but are retrieved each time from the hardware (hence binding it to a machine). In case of a reusable binary (built wit -r flag) then the uuid and serial are in the binary itself but will be manipulated anyway by makekey and makeiv so that they are not usable immediately should anyone ever inspect the binary itself.
 Although the whereabouts from where the serial and uuid are retrieved is traceable and I make no secret of it (machine uuid and srial number for non reusable and random hex digits for reusable) these should be then manipulated in a way that they are not directly usable as is. In the code there is a comment suggesting where this should be done (see makekey and makeiv functions in functions.c): each and every one of you using obash is encouraged to do so. As an example I strip "-" from the uuid and pad short serial numbers to reach the suggested length for the cipher used. Look in sections "Suggestions for key and iv Scrambling"
 
 
@@ -60,7 +60,7 @@ Although the whereabouts from where the serial and uuid are retrieved is traceab
 The actual AES encoding:
 The part that does the actual AES encoding came right out of the Openssl symmetric encryption example from their wiki with very minor changes. It was well documented and easy to reuse and that's what I did.
 See Openssl wiki: https://wiki.openssl.org/index.php/EVP_Symmetric_Encryption_and_Decryption 
-The main part if the example went into mk_sh_c function wile the encoding and decoding functions were left pretty much untouched. The only thing I recall changing was substituting OPENSSL_config with OPENSSL_no_config to avoid not finding openssl.cnf in the same place as where the reusable static binary was built, it's not needed anyway for AES Symmetric Encryption and Decryption.
+The main part if the example went into mk_sh_c function wile the encoding and decoding functions were left pretty much untouched. The only thing I recall changing was substituting OPENSSL_config with OPENSSL_no_config to avoid not finding openssl.cnf in the same place as where the reusable binary was built, it's not needed anyway for AES Symmetric Encryption and Decryption.
 
 
 
@@ -70,7 +70,9 @@ Just like shc it is still possible to extract the script it's just a that at lea
 I've made several attempts to omit using named pipe (which introduces an intrinsic weakness) and each time I hit the same limitation: only non iteractive scripts work right because stdin gets broken wnen the child remaps stdin to read from pipe with dup2.
 If you have any suggestions on how to avoid this please contact me <louigi600 (at) yahoo (dot) it>.
 
-Having to use maned pipes introduces a weakness which can be exploited by writing some simple code. What you need to do is watch for any newly created pipe in /tmp and dump them before the obash reader child empties them. This will not work work every time but you can loop until you succeed eventually (miracle of multitasking).
+Having to use maned pipes introduces a weakness and a security vulnerability which can be exploited:
+1) the weakness can be exploited by writing some simple code. What you need to do is watch for any newly created pipe in /tmp and dump them before the obash reader child empties them. This will not work work every time but you can loop until you succeed eventually (miracle of multitasking).
+2) the security vulnerability could be exploited by much the same approach but attempting to inject shell script before the parent does so thus allowing the injected script to be executed with the same permissions of the good code. This is a good reason for me to keep trying to do without named pipes.
 
 There is another approach that could be used to extract the clear-text script: look at the binary and try to figure out how the key and iv are  scrambled from  uuid and serial number, which in the distributed version is rather simple (and I encourage people to make their personal changes). Once you have key and iv  that are used you could then base64 decode and aes-256-cdc decode the crypted_script vasiable content. If you have the code with witch the obash binary was built on, you can obviously extract the script from the bins (but you should also have the sources in that case).
 
@@ -95,8 +97,9 @@ alter the case or add a constant to each char ....
 
 
 Making a non restricted binary:
-I'm working on buiding a binary that can be used on machines different from the one it was obfuscated on, provided the machines are bynary compatible in the first place and that the kernels and glibc are compatible too. I don't want to hit the same limitations that shc has (where you need to be running fairly similar setup) so I'll go the static binary way.
-This is still work in progress but I've been able to produfe reusable binaries ... just have not had mich time to test it to any extent. The testme script has been obfuscated with -r oprion on a system with kernel 4.4 and glibc 2.17: the bynary produced was able to run on older systems like Ubuntu 10.04 and RHEL 6. The cut, so far, seems to be on kernel that needs to be 2.6.32 or above. 
+I'm working on buiding a binary that can be used on machines different from the one it was obfuscated on, provided the machines are bynary compatible in the first place and that the kernels and glibc are compatible too. In the hope to beable to run the obfuscated script in a widae range of targets is is also possible to produce a statically linked executable.
+
+This is still work in progress but I've been able to produce reusable static binaries ... just have not had mich time to test it to any extent. The testme script has been obfuscated with -r oprion on a system with kernel 4.4 and glibc 2.17: the bynary produced was able to run on older systems like Ubuntu 10.04 and RHEL 6. The cut, so far, seems to be on kernel that needs to be 2.6.32 or above. 
 I've not made any testing the other way waround (compiling on a really old system as seing what happens on newer system).
 
 This is a note for the author
