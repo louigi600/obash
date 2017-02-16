@@ -1,7 +1,8 @@
 WARNING:
-This is work in progress and probabbly only works on linux currently.
+This is work in progress and probabbly only works on linux and FreeBSD(*) currently.
 If you have the opportunity to test it out on any other unix platform please report back the proplems you are hitting.
 
+(*) with many warnings but seems to work right
 
 
 WHY obfuscate shell scripts:
@@ -59,7 +60,7 @@ See recreate_interpreter_header script for details on how interpreter.h is creat
 
 Key and Initialization Vector for AES-256 encoding:
 The key and iv are not hard-coded into the binary (unless you decide to build a reusable binary with -r flag) but are retrieved each time from the hardware (hence binding it to a machine). In case of a reusable binary (built wit -r flag) then the uuid and serial are in the binary itself but will be manipulated anyway by makekey and makeiv so that they are not usable immediately should anyone ever inspect the binary itself.
-Although the whereabouts from where the serial and uuid are retrieved is traceable and I make no secret of it (machine uuid and srial number for non reusable and random hex digits for reusable) these should be then manipulated in a way that they are not directly usable as is. In the code there is a comment suggesting where this should be done (see makekey and makeiv functions in functions.c): each and every one of you using obash is encouraged to do so. As an example I strip "-" from the uuid and pad short serial numbers to reach the suggested length for the cipher used. Look in sections "Suggestions for key and iv Scrambling"
+Although the whereabouts from where the serial and uuid are retrieved is traceable and I make no secret of it (see functions getkey and getiv in functions.c for non reusable target and random hex digits for reusable) these should be then manipulated in a way that they are not directly usable as is. In the code there is a comment suggesting where this should be done (see makekey and makeiv functions in functions.c): each and every one of you using obash is encouraged to do so. As an example I strip "-" from the uuid and pad short serial numbers to reach the suggested length for the cipher used. Look in sections "Suggestions for key and iv Scrambling"
 
 
 

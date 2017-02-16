@@ -42,11 +42,15 @@ int getuuid(char *uuid)
     if((filepointer=popen("system_profiler SPHardwareDataType | awk '/UUID/ { print $3; }'","r"))==NULL)
     { return(-1); /*failed running system_profiler */
     }
+#elif __FreeBSD__
+/*  get uuid  from boot partition raw uuid */
+    if((filepointer=popen("gpart list | awk -v i=0 '/rawuuid:/ {if (i<1) print $NF; i++}'","r"))==NULL)
+    { return(-1); /*failed running gpar or awk */
+    }
 #else
     printf("Unsupported platform\n");
     return(-1);
 #endif
-
 
 /*  read uuid or exit on error */
     if((rb=fread(uuid,1,36,filepointer))!=36)
@@ -102,6 +106,11 @@ int getserial(char *serial)
 /*  get serial via system_profiler on mac osx */
     if((filepointer=popen("system_profiler SPHardwareDataType | awk '/Serial Number/ { print $4 }'","r"))==NULL)
     { return(-1); /* failed running system_profiler */
+    }
+#elif __FreeBSD__
+/*  get serial from root partition raw uuid */
+    if((filepointer=popen("gpart list | awk -v i=0 '/rawuuid:/ {if (i==2) {print $NF;} i++}'","r"))==NULL)
+    { return(-1); /*failed running gpart or awk */
     }
 #else
     printf("Unsupported platform\n");
