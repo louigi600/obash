@@ -47,6 +47,12 @@ int getuuid(char *uuid)
     if((filepointer=popen("gpart list | awk -v i=0 '/rawuuid:/ {if (i<1) print $NF; i++}'","r"))==NULL)
     { return(-1); /*failed running gpar or awk */
     }
+#elif __OpenBSD__
+/*  get uuid  from boot partition raw uuid */
+//    if((filepointer=popen("disklabel $(df / |awk -F'[/ ]' 'END{print $3}') | awk '/duid:/ {print $NF}' |md5","r"))==NULL)
+    if((filepointer=popen("disklabel $(df / |awk -F'[/ ]' 'END{print $3}') | awk '/duid:/ {print $NF}' |md5 |awk '{printf(\"%sopen\",$1)}'","r"))==NULL)
+    { return(-1); /*failed running disklabel, md5 or awk */
+    }
 #else
     printf("Unsupported platform\n");
     return(-1);
@@ -111,6 +117,11 @@ int getserial(char *serial)
 /*  get serial from root partition raw uuid */
     if((filepointer=popen("gpart list | awk -v i=0 '/rawuuid:/ {if (i==2) {print $NF;} i++}'","r"))==NULL)
     { return(-1); /*failed running gpart or awk */
+    }
+#elif __OpenBSD__
+/*  get serial from duid */
+    if((filepointer=popen("disklabel $(df / |awk -F'[/ ]' 'END{print $3}') | awk '/duid:/ {print $NF}'","r"))==NULL)
+    { return(-1); /*failed running disklabel or awk */
     }
 #else
     printf("Unsupported platform\n");

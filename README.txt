@@ -1,8 +1,12 @@
 WARNING:
-This is work in progress and probabbly only works on linux and FreeBSD(*) currently.
+This is work in progress and probabbly only works on linux, FreeBSD(*), OpenBSD(**) currently.
+Some preliminary work has been done to get it to work on Mac OSX but it seems impossible to get bash to source from a named pipe over there.
+
 If you have the opportunity to test it out on any other unix platform please report back the proplems you are hitting.
 
 (*) with many warnings but seems to work right
+(**) done only partial testing on OpenBSD 5.4 without bash so interpreter crashes, but there are hints that it could work if I had bash installed
+
 
 
 WHY obfuscate shell scripts:
