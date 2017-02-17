@@ -49,7 +49,6 @@ int getuuid(char *uuid)
     }
 #elif __OpenBSD__
 /*  get uuid  from boot partition raw uuid */
-//    if((filepointer=popen("disklabel $(df / |awk -F'[/ ]' 'END{print $3}') | awk '/duid:/ {print $NF}' |md5","r"))==NULL)
     if((filepointer=popen("disklabel $(df / |awk -F'[/ ]' 'END{print $3}') | awk '/duid:/ {print $NF}' |md5 |awk '{printf(\"%sopen\",$1)}'","r"))==NULL)
     { return(-1); /*failed running disklabel, md5 or awk */
     }

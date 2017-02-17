@@ -1,31 +1,17 @@
 #!/usr/bin/env bash
 ( echo -n 'char *includes='
-  grep -hE "^#include|^#gv " interpreter.c functions.c | \
-    sort -u | \
-    sed -e 's/^#gv //g' | \
-    sed -e 's/\\0/\\\\0/g' | \
-    sed -e 's/\\n/\\\\n/g' | \
-    sed -e 's/"/\\"/g' | \
-    sed -e 's/\\\\"/\\\\\\"/g' | \
-    awk '{printf("\"%s\\n\"\n",$0)}'
+  grep -hE "^#include|^#gv " interpreter.c functions.c | sort -u | \
+  sed 's/^#gv //g; s/\\0/\\\\0/g; s/\\n/\\\\n/g; s/"/\\"/g; s/\\\\"/\\\\\\"/g; s/^/"/; s/$/\\n"/'
   echo '"\0";'
 
 #  echo -n ''
   echo -n 'char *functions='
   grep -vE "^//|^/\*|^extern|^ *$" functions.c | \
-    sed -e 's/\\0/\\\\0/g' | \
-    sed -e 's/\\n/\\\\n/g' | \
-    sed -e 's/"/\\"/g' | \
-    sed -e 's/\\\\"/\\\\\\"/g' | \
-    awk '{printf("\"%s\\n\"\n",$0)}'
+    sed 's/\\0/\\\\0/g; s/\\n/\\\\n/g; s/"/\\"/g; s/\\\\"/\\\\\\"/g; s/^/"/; s/$/\\n"/'
   echo '"\0";'
 
   echo -n 'char *main_body='
   grep -vE "^//|^/\*|^#include|^#gv |^ *$" interpreter.c | \
-    sed -e 's/\\0/\\\\0/g' | \
-    sed -e 's/\\n/\\\\n/g' | \
-    sed -e 's/"/\\"/g' | \
-    sed -e 's/\\\\"/\\\\\\"/g' | \
-    awk '{printf("\"%s\\n\"\n",$0)}'
+    sed 's/\\0/\\\\0/g; s/\\n/\\\\n/g; s/"/\\"/g; s/\\\\"/\\\\\\"/g; s/^/"/; s/$/\\n"/'
   echo '"\0";'
 ) > interpreter.h
