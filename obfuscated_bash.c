@@ -87,7 +87,7 @@ int get_param (char *param,  char shortname,  option *oa, int oalen)
       return(i);
     }
   }
-  sprintf(param,"\0");
+//  sprintf(param,"\0");
   return(-1);
 }
 
@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
   } else sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -lssl -lcrypto && strip %s",input_filename,output_filename,output_filename);
 //  printf("%s\n",str); 
 //  exit(0);
-  printf("... ",input_filename); 
+  printf("... "); 
   if(system(str)!=0) 
   { printf("failed\n");
     exit(1);

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ( echo -n 'char *includes='
   grep -hE "^#include|^#gv " interpreter.c functions.c | sort -u | \
-  sed 's/^#gv //g; s/\\0/\\\\0/g; s/\\n/\\\\n/g; s/"/\\"/g; s/\\\\"/\\\\\\"/g; s/^/"/; s/$/\\n"/'
+  sed 's/^#gv //; s/\\0/\\\\0/g; s/\\n/\\\\n/g; s/"/\\"/g; s/\\\\"/\\\\\\"/g; s/^/"/; s/$/\\n"/'
   echo '"\0";'
 
 #  echo -n ''

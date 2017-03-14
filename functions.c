@@ -321,7 +321,7 @@ int mk_sh_c ( char *infilename, char *key, char *iv , bool reusable, char *seria
   printf("input filename: %s\n",infilename);
   printf("input file size: %i\n",insize);
   printf("ciphertext size: %i\n",ctsize);
-  printf("base64 encoded ciphertext: %i : %i whole lines\n",strlen(b64ctx),strlen(b64ctx)/65);
+  printf("base64 encoded ciphertext: %zu : %zu whole lines\n",strlen(b64ctx),strlen(b64ctx)/65);
   printf("intermediate c generated filename: %s\n",outfilename);
 //
 
