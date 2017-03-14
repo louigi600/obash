@@ -7,7 +7,7 @@ interpreter.h:	interpreter.c functions.c
 	./recreate_interpreter_header
 
 obash:	obash.c interpreter.h functions.h functions.c
-	$(CC) obash.c -o obash -lssl -lcrypto
+	$(CC) obash.c -o obash -lssl -lcrypto 
 	
 
 all:	obash
