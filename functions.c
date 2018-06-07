@@ -279,7 +279,7 @@ int mk_sh_c ( char *infilename, char *key, char *iv , bool reusable, char *seria
   char str[256]="\0";
 
 /* outfilename is infilename suffixed with .c */
-  outfilename=malloc(strlen(infilename)+2);
+  outfilename=malloc(strlen(infilename)+3);
   strcpy(outfilename,infilename);
   strcat(outfilename,".c");
 
