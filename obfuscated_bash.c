@@ -244,7 +244,7 @@ int main(int argc, char *argv[])
   if(flag_status('s',optionarray,sizeof(optionarray)/sizeof(option)))
   { printf("as static binary ");
 //    sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -static -lssl -lcrypto -ldl -lltdl -static-libgcc && strip %s",input_filename,output_filename,output_filename);
-    sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -static -lssl -lcrypto -ldl -static-libgcc && strip %s",input_filename,output_filename,output_filename);
+    sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -static -lssl -lcrypto -ldl -Wl,--whole-archive -lpthread -Wl,--no-whole-archive -static-libgcc && strip %s",input_filename,output_filename,output_filename);
   } else sprintf(str,"sleep 1 ; sync ;cc %s.c -o %s -lssl -lcrypto && strip %s",input_filename,output_filename,output_filename);
 //  printf("%s\n",str); 
 //  exit(0);
