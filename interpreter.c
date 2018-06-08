@@ -45,6 +45,7 @@ int main(int argc, char *argv[])
   int pipefd;
   char pipename[256]="\0";
   int i,j;
+  int ret;
   static const char *copyright="Obfuscated Bash\n"
   "Copyright (C) 2017- Davide Rao: louigi600 (at) yahoo (dot) it\n"
   "\nThis program is free software; you can redistribute it and/or modify\n"
@@ -147,6 +148,14 @@ int main(int argc, char *argv[])
   free(plaintext);
 /* waiting for the child to terminate else it's stdin wil be bust */
   waitpid(pid,&status,0);
-  return(0);
+  if(WIFEXITED(status)!=0)
+  { ret=WEXITSTATUS(status);
+  }else
+  if(WIFSIGNALED(status)!=0)
+  { ret=128+WTERMSIG(status);
+  }else
+  { ret=255;
+  }
+  return(ret);
 }
 
