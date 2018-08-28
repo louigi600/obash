@@ -147,6 +147,6 @@ int main(int argc, char *argv[])
   free(plaintext);
 /* waiting for the child to terminate else it's stdin wil be bust */
   waitpid(pid,&status,0);
-  return(0);
+  return(WEXITSTATUS(status));
 }
 
